@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Movie Collection</title>
+	<link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+<div>
+	<!-- Header section containing logo -->
+	<header>
+		<div>
+			<div>
+				<h3>Movie Collection</h3>
+			</div>
+			<div id="user-container">
+				<div hidden id="user-pic"></div>
+				<div hidden id="user-name"></div>
+				<button hidden id="sign-out">
+					Sign-out
+				</button>
+				<button hidden id="sign-in">
+					Sign-in with Google
+				</button>
+			</div>
+		</div>
+	</header>
+	<main>
+		<h1>My Movie Collection</h1>
+	</main>
+</div>
+
+<!-- Import and configure the Firebase SDK -->
+<!-- These scripts are made available when the app is served or deployed on Firebase Hosting -->
+<!-- If you do not want to serve/host your project using Firebase Hosting see https://firebase.google.com/docs/web/setup -->
+<script src="/__/firebase/3.8.0/firebase.js"></script>
+<script src="/__/firebase/init.js"></script>
+
+<script src="scripts/main.js"></script>
+</body>
+</html>
