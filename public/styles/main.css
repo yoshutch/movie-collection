@@ -1,28 +1,27 @@
-#user-container {
-  position: absolute;
-  display: flex;
-  flex-direction: row;
-  top: 22px;
-  width: 100%;
-  right: 0;
-  padding-left: 10px;
-  justify-content: flex-end;
-  padding-right: 10px;
+#user-pic {
+	margin-top: 4px;
+	width: 40px;
+	height: 40px;
 }
-#user-container #user-pic {
-  top: -3px;
-  position: relative;
-  display: inline-block;
-  background-image: url('/images/profile_placeholder.png');
-  background-repeat: no-repeat;
-  width: 40px;
-  height: 40px;
-  background-size: 40px;
-  border-radius: 20px;
+
+#sign-in, #sign-out {
+	margin-right: 15px;
 }
-#user-container #user-name {
-  font-size: 16px;
-  line-height: 36px;
-  padding-right: 10px;
-  padding-left: 20px;
+
+#powered-by-tmdb {
+	height: 60px;
+	padding: 10px;
+}
+
+#search-results {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+#search-results div {
+	display: flex;
+	flex-direction: column;
+	width: 100px;
+	margin-left: 5px;
+	margin-right: 5px;
 }

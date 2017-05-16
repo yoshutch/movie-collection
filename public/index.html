@@ -5,31 +5,36 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Movie Collection</title>
 	<link rel="stylesheet" href="styles/main.css">
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
 </head>
 <body>
-<div>
-	<!-- Header section containing logo -->
-	<header>
-		<div>
-			<div>
-				<h3>Movie Collection</h3>
-			</div>
-			<div id="user-container">
-				<div hidden id="user-pic"></div>
-				<div hidden id="user-name"></div>
-				<button hidden id="sign-out">
-					Sign-out
-				</button>
-				<button hidden id="sign-in">
-					Sign-in with Google
-				</button>
-			</div>
+<!-- Header section containing logo -->
+<nav class="navbar navbar-default">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<a class="navbar-brand" href="#">Movie Collection</a>
 		</div>
-	</header>
-	<main>
-		<h1>My Movie Collection</h1>
-	</main>
+		<ul class="nav navbar-nav navbar-right">
+			<li><img id="user-pic" class="img-circle" hidden src="images/profile_placeholder.png"/></li>
+			<li><p id="user-name" hidden class="navbar-text"></p></li>
+			<li><button id="sign-in" hidden type="button" class="btn btn-default navbar-btn">Sign in</button></li>
+			<li><button id="sign-out" hidden type="button" class="btn btn-default navbar-btn">Sign out</button></li>
+		</ul>
+	</div>
+</nav>
+<div class="container">
+	<h1>My Movie Collection</h1>
+	<input id="search" type="text"/>
+	<button id="search-button" type="button">Search</button>
+	<div id="search-results"></div>
 </div>
+<nav class="navbar navbar-default navbar-fixed-bottom">
+	<div class="container">
+		<img id="powered-by-tmdb" src="images/powered-by-tmdb.svg"/>
+	</div>
+</nav>
 
 <!-- Import and configure the Firebase SDK -->
 <!-- These scripts are made available when the app is served or deployed on Firebase Hosting -->
@@ -37,6 +42,10 @@
 <script src="/__/firebase/3.8.0/firebase.js"></script>
 <script src="/__/firebase/init.js"></script>
 
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 <script src="scripts/main.js"></script>
 </body>
 </html>
