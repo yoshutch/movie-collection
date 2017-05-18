@@ -5,6 +5,7 @@ function MovieCollection(){
 	this.userPic = document.getElementById('user-pic');
 	this.searchTextField = document.getElementById('search');
 	this.searchResults = document.getElementById('search-results');
+	this.collection = document.getElementById('collection');
 
 	this.signInButton = document.getElementById('sign-in');
 	this.signOutButton = document.getElementById('sign-out');
@@ -28,9 +29,9 @@ MovieCollection.prototype.initFirebase = function () {
 };
 
 MovieCollection.prototype.initSettings = function () {
-	this.settings = this.database.ref("settings");
+	this.settingsRef = this.database.ref("settings");
 	var self = this;
-	this.settings.once("value").then(function(snapshot){
+	this.settingsRef.once("value").then(function(snapshot){
 		self.tmdbApiKey = snapshot.child("tmdb/apikey").val();
 	});
 };
@@ -67,6 +68,8 @@ MovieCollection.prototype.onAuthStateChanged = function (user) {
 
 		// Hide sign-in button.
 		this.signInButton.style.display = "none";
+
+		this.loadCollection(user.uid);
 
 	} else { // User is signed out!
 		// Hide user's profile and sign-out button.
@@ -112,15 +115,93 @@ MovieCollection.prototype.populateSearchResults = function (result){
 		node.appendChild(textNode);
 		if (results[i].poster_path != undefined){
 			var picNode = document.createElement("IMG");
-			picNode.setAttribute("src", "https://image.tmdb.org/t/p/w92/" + results[i].poster_path);
+			picNode.setAttribute("src", this.posterUrl(results[i].poster_path, MovieCollection.POSTER_SMALL));
 			node.appendChild(picNode);
 		}
 		var buttonNode = document.createElement("BUTTON");
 		var buttonText = document.createTextNode("Add to Collection");
+		buttonNode.dataset.movieId = results[i].id;
 		buttonNode.appendChild(buttonText);
 		node.appendChild(buttonNode);
 		this.searchResults.appendChild(node);
 	}
+};
+
+MovieCollection.prototype.loadCollection = function (collectionId){
+	console.log("loading collection");
+	this.collectionRef = this.database.ref("collections/" + collectionId);
+	this.moviesRef = this.database.ref("collections/" + collectionId + "/movies");
+
+	//make sure we remove all previous listeners.
+	this.moviesRef.off();
+
+	var setMovie = function(data) {
+		var val = data.val();
+		var movieId = data.key;
+		this.displayMovieInCollection(movieId, val.title, val.copies);
+	}.bind(this);
+	this.moviesRef.on('child_added', setMovie);
+	this.moviesRef.on('child_changed', setMovie);
+};
+
+MovieCollection.prototype.getMovieInfo = function (movieId, callback){
+	var xmlhttp = new XMLHttpRequest();
+	xmlhttp.onreadystatechange = function() {
+		if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
+			if (xmlhttp.status == 200) {
+				console.log("200");
+				callback(JSON.parse(xmlhttp.responseText));
+			}
+			else if (xmlhttp.status == 400) {
+				alert('There was an error 400');
+			}
+			else {
+				alert('something else other than 200 was returned');
+			}
+		}
+	};
+
+	xmlhttp.open("GET", "https://api.themoviedb.org/3/movie/" + movieId +"?api_key=" + this.tmdbApiKey + "&language=en-US", true);
+	xmlhttp.send();
+};
+
+MovieCollection.MOVIE_TEMPLATE =
+	'<div class="movie">' +
+	'<div class="title"></div>' +
+	'<img class="poster"/>' +
+	'<ul class="copies"></ul> ' +
+	'</div>';
+MovieCollection.POSTER_BASE_URL = "https://image.tmdb.org/t/p/";
+MovieCollection.POSTER_SMALL = "w92";
+MovieCollection.POSTER_MEDIUM = "w154";
+
+MovieCollection.prototype.displayMovieInCollection = function (movieId, title, copies){
+	var div = document.getElementById(movieId);
+	if (!div) {
+		var container = document.createElement('div');
+		container.innerHTML = MovieCollection.MOVIE_TEMPLATE;
+		div = container.firstChild;
+		div.setAttribute('id', movieId);
+		this.collection.appendChild(div);
+	}
+	this.getMovieInfo(movieId, function(movieInfo){
+		console.log(movieInfo);
+		div.querySelector('.poster').setAttribute('src', this.posterUrl(movieInfo.poster_path, MovieCollection.POSTER_MEDIUM));
+	}.bind(this));
+
+	div.querySelector('.title').innerHTML = title;
+	div.querySelector('.copies').innerHTML = "";
+	if (copies){
+		for (var i = 0; i < copies.length; i ++) {
+			var li = document.createElement('li');
+			li.appendChild(document.createTextNode(copies[i]));
+			div.querySelector('.copies').appendChild(li);
+		}
+	}
+};
+
+MovieCollection.prototype.posterUrl = function (posterPath, size) {
+	return MovieCollection.POSTER_BASE_URL + size + "/" + posterPath;
 };
 
 window.onload = function () {
