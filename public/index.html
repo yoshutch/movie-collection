@@ -27,8 +27,22 @@
 <div class="container">
 	<h1>My Movie Collection</h1>
 	<input id="search" type="text"/>
-	<button id="search-button" type="button">Search</button>
-	<div id="search-results"></div>
+	<button id="search-button" type="button" class="btn btn-primary" data-toggle="modal" data-target="#search-modal">Search</button>
+	<div class="modal fade" id="search-modal" tabindex="-1" role="dialog" aria-labelledby="search-modal-label">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="search-modal-label">Search</h4>
+				</div>
+				<div id="search-results" class="modal-body">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
 	<div id="collection"></div>
 </div>
 <nav class="navbar navbar-default navbar-fixed-bottom">

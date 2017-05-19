@@ -13,15 +13,29 @@
 	padding: 10px;
 }
 
-#search-results {
+#search-results, #collection {
 	display: flex;
 	flex-wrap: wrap;
 }
 
-#search-results div {
+div.movie {
 	display: flex;
 	flex-direction: column;
-	width: 100px;
+	width: 160px;
 	margin-left: 5px;
 	margin-right: 5px;
+}
+
+div.movie img{
+	margin-bottom: 10px;
+}
+
+div.movie div.btn-group{
+	margin-top: auto;
+}
+
+.title {
+	margin-bottom: 10px;
+	text-align: center;
+	font-weight: bold;
 }
