@@ -37,6 +37,13 @@ function MovieCollection(){
 	this.signOutButton.addEventListener('click', this.signOut.bind(this));
 	this.signInButton.addEventListener('click', this.signIn.bind(this));
 	this.searchButton.addEventListener('click', this.searchForMovies.bind(this));
+	this.searchTextField.addEventListener('keypress', function(e){
+		var key = e.which || e.keyCode;
+		if (key === 13){
+			this.searchForMovies();
+			$("#search-modal").modal();
+		}
+	}.bind(this));
 
 	this.initFirebase();
 }
@@ -255,8 +262,6 @@ MovieCollection.prototype.removeMovieCopyFromCollection = function (movieId, cop
 		}
 	}.bind(this));
 };
-
-
 
 MovieCollection.prototype.loadCollection = function (collectionId){
 	console.log("loading collection");
