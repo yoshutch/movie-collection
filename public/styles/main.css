@@ -39,3 +39,19 @@ div.movie div.btn-group{
 	text-align: center;
 	font-weight: bold;
 }
+
+.copies {
+	padding: 0 5px !important;
+}
+
+.copy {
+	margin: 0 5px;
+}
+
+.copy button.close{
+	margin-left: 10px;
+}
+
+.close-small {
+	font-size: inherit !important;
+}

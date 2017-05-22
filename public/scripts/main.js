@@ -4,7 +4,7 @@ MovieCollection.MOVIE_TEMPLATE =
 	'<div class="movie thumbnail">' +
 	'<div class="title"></div>' +
 	'<img class="poster"/>' +
-	'<ul class="copies"></ul> ' +
+	'<ul class="copies list-inline"></ul> ' +
 	'</div>';
 MovieCollection.SEARCHED_MOVIE_TEMPLATE =
 	'<div class="movie thumbnail">' +
@@ -13,15 +13,8 @@ MovieCollection.SEARCHED_MOVIE_TEMPLATE =
 	'<div class="btn-group">' +
 		'<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" ' +
 			'aria-haspopup="true" aria-expanded="false">Add To Collection<span class="caret"></span></button>' +
-		'<ul class="dropdown-menu">' +
-			'<li><a class="add-btn" href="#">DVD</a></li>' +
-			'<li><a class="add-btn" href="#">Blu-ray</a></li>' +
-			'<li><a class="add-btn" href="#">Amazon Video</a></li>' +
-			'<li><a class="add-btn" href="#">Ultra Violet</a></li>' +
-			'<li><a class="add-btn" href="#">Google Play</a></li>' +
-			'<li><a class="add-btn" href="#">iTunes</a></li>' +
-			'<li role="separator" class="divider"></li>' +
-			'<li><a class="add-btn" href="#">Other</a></li>' +
+		'<ul id="add-copy-list" class="dropdown-menu">' +
+			//to be populated from database
 		'</ul>' +
 	'</div>' +
 	'</div>';
@@ -60,11 +53,16 @@ MovieCollection.prototype.initFirebase = function () {
 
 MovieCollection.prototype.initSettings = function () {
 	this.settingsRef = this.database.ref("settings");
-	var self = this;
 	this.settingsRef.once("value").then(function(snapshot){
-		self.tmdbApiKey = snapshot.child("tmdb/apikey").val();
-		self.copyTypes = snapshot.child("copy-types").val();
-	});
+		this.tmdbApiKey = snapshot.child("tmdb/apikey").val();
+		this.copyTypes = snapshot.child("copy-types").val();
+		if (this.copyTypes){
+			this.copyTypesHtml = "";
+			for (var i = 0; i < this.copyTypes.length; i ++){
+				this.copyTypesHtml += '<li><a class="add-btn" href="#" data-copy-type="' + this.copyTypes[i] + '">' + this.copyTypes[i] + '</a></li>';
+			}
+		}
+	}.bind(this));
 };
 
 // Signs-in.
@@ -125,7 +123,6 @@ MovieCollection.prototype.populateSearchResults = function (result){
 	this.searchResults.innerHTML = "";
 	var results = result.results;
 	for (var i = 0; i < results.length; i ++){
-
 		var container = document.createElement('div');
 		container.innerHTML = MovieCollection.SEARCHED_MOVIE_TEMPLATE;
 		var div = container.firstChild;
@@ -136,23 +133,70 @@ MovieCollection.prototype.populateSearchResults = function (result){
 		if (results[i].poster_path != undefined){
 			div.querySelector('.poster').setAttribute("src", this.posterUrl(results[i].poster_path, MovieCollection.POSTER_MEDIUM));
 		}
+		var addCopyList = div.querySelector('#add-copy-list');
+		addCopyList.innerHTML = this.copyTypesHtml;
+		this.movieCopiesAlreadyInCollection(results[i].id, this.userUid, function (movieId, alreadyOwnedCopies){
+			for (var j = 0; j < alreadyOwnedCopies.length; j ++){
+				var checkNode = document.createElement("span");
+				checkNode.className = "glyphicon glyphicon-ok";
+				var alreadyOwnedCopyButton = addCopyList.querySelector('li a[data-copy-type="' + alreadyOwnedCopies[j] + '"]');
+				alreadyOwnedCopyButton.appendChild(checkNode);
+				alreadyOwnedCopyButton.className = "remove-btn";
+			}
+		});
 	}
 	var self = this;
-	$(".add-btn").on('click', function(event){
+	var addButtonListener = function(event){
 		var $button = $(this);
-		$button.addClass("disabled");
 		var $parent = $button.parent().parent().parent().parent();
-		self.addMovieToCollection($parent.data("movie-id"), $parent.data("movie-title"), $button.html(), function(error){
+		self.addMovieToCollection($parent.data("movie-id"), $parent.data("movie-title"), $button.data("copy-type"), self.userUid, function(error){
 			if (error) {
 				console.error("Data could not be saved." + error);
 			} else {
 				console.log("Data saved successfully.");
+				$button.addClass("remove-btn").removeClass("add-btn")
+					.unbind().on('click', removeButtonListener)
+					.append('<span class="glyphicon glyphicon-ok"></span>');
 			}
 		});
-	})
+	};
+	var removeButtonListener = function(event){
+		var $button = $(this);
+		var $parent = $button.parent().parent().parent().parent();
+		self.removeMovieCopyFromCollection($parent.data("movie-id"), $button.data("copy-type"), self.userUid, function(error){
+			if (error) {
+				console.error("Data could not be removed." + error);
+			} else {
+				console.log("Data removed successfully.");
+				$button.removeClass("remove-btn").addClass("add-btn")
+					.unbind().on('click', addButtonListener)
+					.find("span.glyphicon").remove();
+				console.log($button);
+			}
+		});
+	};
+	// add button functionality
+	$(".add-btn").on('click', addButtonListener);
+	// remove button functionality
+	$(".remove-btn").on('click', removeButtonListener);
+
 };
 
-MovieCollection.prototype.addMovieToCollection = function (movieId, title, copyType, callback) {
+// Returns an array of the copies already in the collection
+MovieCollection.prototype.movieCopiesAlreadyInCollection = function(movieId, collectionId, callback){
+	if (!this.moviesRef) {
+		this.moviesRef = this.database.ref("collections/" + collectionId + "/movies");
+	}
+	this.moviesRef.child(movieId).once('value', function(snapshot){
+		var val = snapshot.val();
+		var exists = (val !== null);
+		if (exists) {
+			callback(movieId, toArray(val.copies));
+		}
+	});
+};
+
+MovieCollection.prototype.addMovieToCollection = function (movieId, title, copyType, collectionId, callback) {
 	console.log("adding movie to collection: ", movieId, title, copyType);
 	if (!this.moviesRef) {
 		this.moviesRef = this.database.ref("collections/" + collectionId + "/movies");
@@ -160,6 +204,16 @@ MovieCollection.prototype.addMovieToCollection = function (movieId, title, copyT
 	this.moviesRef.child(movieId).once('value', function(snapshot){
 		if (snapshot.val() !== null){
 			// movie exists in your collection, adding copyType to copies
+			var alreadyExistingCopies = toArray(snapshot.val().copies);
+			if (alreadyExistingCopies){
+				// check if copy is already there
+				for (var i = 0; i < alreadyExistingCopies.length; i ++){
+					if (alreadyExistingCopies[i] === copyType){
+						callback("Copy: " + copyType + " already exists in your collection");
+						return;
+					}
+				}
+			}
 			this.moviesRef.child(movieId + "/copies").push().set(copyType, callback);
 		} else {
 			// movie doesn't already exist in your collection
@@ -174,6 +228,36 @@ MovieCollection.prototype.addMovieToCollection = function (movieId, title, copyT
 	}.bind(this));
 };
 
+MovieCollection.prototype.removeMovieCopyFromCollection = function (movieId, copyType, collectionId, callback) {
+	console.log("removing movie copy from collection: ", movieId, copyType);
+	if (!this.moviesRef) {
+		this.moviesRef = this.database.ref("collections/" + collectionId + "/movies");
+	}
+	this.moviesRef.child(movieId).once('value', function(snapshot){
+		if (snapshot.val() !== null){
+			var movieCopiesAlreadyInCollection = snapshot.val().copies;
+			var keys = Object.keys(movieCopiesAlreadyInCollection);
+			for (var i = 0; i < keys.length; i ++){
+				if (movieCopiesAlreadyInCollection[keys[i]] === copyType){
+					if (i === 0){
+						// if the only copy was the one removed then remove the movie entirely
+						this.moviesRef.child(movieId).remove(callback);
+					} else {
+						// otherwise remove just the copy
+						this.moviesRef.child(movieId + "/copies/" + keys[i]).remove(callback);
+					}
+					return;
+				}
+			}
+			callback("Copy: " + copyType + " does not exist in your collection. Nothing was removed.");
+		} else {
+			callback("Movie is not in your collection. Nothing was removed.");
+		}
+	}.bind(this));
+};
+
+
+
 MovieCollection.prototype.loadCollection = function (collectionId){
 	console.log("loading collection");
 	this.collectionRef = this.database.ref("collections/" + collectionId);
@@ -187,7 +271,7 @@ MovieCollection.prototype.loadCollection = function (collectionId){
 	var setMovie = function(data) {
 		var val = data.val();
 		var movieId = data.key;
-		this.displayMovieInCollection(movieId, val.title, val.copies);
+		this.displayMovieInCollection(movieId, val.title, toArray(val.copies));
 	}.bind(this);
 	this.moviesRef.on('child_added', setMovie);
 	this.moviesRef.on('child_changed', setMovie);
@@ -206,7 +290,6 @@ MovieCollection.prototype.getMovieInfo = function (movieId, callback){
 };
 
 MovieCollection.prototype.displayMovieInCollection = function (movieId, title, copies){
-	console.log("displayMovieInCollection: ", movieId, title, copies);
 	var div = document.getElementById(movieId);
 	if (!div) {
 		var container = document.createElement('div');
@@ -216,18 +299,20 @@ MovieCollection.prototype.displayMovieInCollection = function (movieId, title, c
 		this.collection.appendChild(div);
 	}
 	this.getMovieInfo(movieId, function(movieInfo){
-		console.log(movieInfo);
 		div.querySelector('.poster').setAttribute('src', this.posterUrl(movieInfo.poster_path, MovieCollection.POSTER_MEDIUM));
 	}.bind(this));
 
 	div.querySelector('.title').innerHTML = title;
 	div.querySelector('.copies').innerHTML = "";
 	if (copies){
-		var keys = Object.keys(copies);
-		for (var i = 0; i < keys.length; i ++) {
-			var key = keys[i];
+		for (var i = 0; i < copies.length; i ++) {
 			var li = document.createElement('li');
-			li.appendChild(document.createTextNode(copies[key]));
+			li.className = "copy label label-default";
+			li.appendChild(document.createTextNode(copies[i]));
+			var removeContainer = document.createElement('div');
+			removeContainer.innerHTML = '<button type="button" class="close close-small" aria-label="Close"><span aria-hidden="true">&times;</span></button>';
+			var removeNode = removeContainer.firstChild;
+			li.appendChild(removeNode);
 			div.querySelector('.copies').appendChild(li);
 		}
 	}
@@ -235,6 +320,14 @@ MovieCollection.prototype.displayMovieInCollection = function (movieId, title, c
 
 MovieCollection.prototype.posterUrl = function (posterPath, size) {
 	return MovieCollection.POSTER_BASE_URL + size + "/" + posterPath;
+};
+
+const toArray = function (objArray) {
+	if (objArray){
+		return Object.keys(objArray).map(function (e) {
+			return objArray[e];
+		});
+	}
 };
 
 const callTmdbApi = function(path, successCallback, failCallback){
