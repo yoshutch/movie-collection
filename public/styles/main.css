@@ -13,7 +13,7 @@
 	padding: 10px;
 }
 
-.title-div {
+#title-section {
 	display: flex;
 	flex-direction: row;
 	justify-content: space-between;
@@ -27,6 +27,26 @@
 #search-results, #collection {
 	display: flex;
 	flex-wrap: wrap;
+}
+
+#filters h3{
+	margin-top: 0;
+}
+#filter-groups{
+	display: flex;
+}
+#filter-groups .panel {
+	flex-grow: 1;
+	margin: 0 10px;
+}
+#filter-groups .panel-body {
+	display: flex;
+	flex-direction: column;
+	flex-wrap: wrap;
+	max-height: 200px;
+}
+#filter-buttons {
+	margin-top: 10px;
 }
 
 div.movie, div.movie-sm {

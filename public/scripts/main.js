@@ -18,6 +18,12 @@ MovieCollection.SEARCHED_MOVIE_TEMPLATE =
 		'</ul>' +
 	'</div>' +
 	'</div>';
+MovieCollection.FILTER_CHECKBOX_TEMPLATE =
+	'<div class="checkbox">' +
+	'<label>' +
+	'<input type="checkbox">' +
+	'</label>' +
+	'</div>';
 MovieCollection.POSTER_BASE_URL = "https://image.tmdb.org/t/p/";
 MovieCollection.POSTER_SMALL = "w92";
 MovieCollection.POSTER_MEDIUM = "w154";
@@ -30,11 +36,17 @@ function MovieCollection(){
 	this.search2TextField = document.getElementById('search2');
 	this.searchResults = document.getElementById('search-results');
 	this.collection = document.getElementById('collection');
+	this.genreFilterGroup = document.getElementById('genre-filter-group');
+	this.copiesFilterGroup = document.getElementById('copies-filter-group');
 
 	this.signInButton = document.getElementById('sign-in');
 	this.signOutButton = document.getElementById('sign-out');
 	this.searchButton = document.getElementById('search-button');
 	this.search2Button = document.getElementById('search2-button');
+	this.showFilterButton = document.getElementById('show-filters');
+
+	this.genreSet = new Set();
+	this.copySet = new Set();
 
 	this.signOutButton.addEventListener('click', this.signOut.bind(this));
 	this.signInButton.addEventListener('click', this.signIn.bind(this));
@@ -56,6 +68,10 @@ function MovieCollection(){
 		if (key === 13){
 			this.searchForMovies(this.search2TextField.value);
 		}
+	}.bind(this));
+	this.showFilterButton.addEventListener('click', function(){
+		console.log(this.genreSet, this.copySet);
+		this.loadFilterOptions();
 	}.bind(this));
 
 	this.initFirebase();
@@ -151,7 +167,7 @@ MovieCollection.prototype.populateSearchResults = function (result){
 		div.setAttribute('data-movie-title', results[i].title);
 		div.querySelector('.title').innerHTML = results[i].title;
 		if (results[i].poster_path != undefined){
-			div.querySelector('.poster').setAttribute("src", this.posterUrl(results[i].poster_path, MovieCollection.POSTER_MEDIUM));
+			div.querySelector('.poster').setAttribute("src", posterUrl(results[i].poster_path, MovieCollection.POSTER_MEDIUM));
 		}
 		var addCopyList = div.querySelector('#add-copy-list');
 		addCopyList.innerHTML = this.copyTypesHtml;
@@ -317,13 +333,17 @@ MovieCollection.prototype.displayMovieInCollection = function (movieId, title, c
 		this.collection.appendChild(div);
 	}
 	this.getMovieInfo(movieId, function(movieInfo){
-		div.querySelector('.poster').setAttribute('src', this.posterUrl(movieInfo.poster_path, MovieCollection.POSTER_MEDIUM));
+		div.querySelector('.poster').setAttribute('src', posterUrl(movieInfo.poster_path, MovieCollection.POSTER_MEDIUM));
+		for (var i = 0; i < movieInfo.genres.length; i ++) {
+			this.genreSet.add(movieInfo.genres[i].name);
+		}
 	}.bind(this));
 
 	div.querySelector('.title').innerHTML = title;
 	div.querySelector('.copies').innerHTML = "";
 	if (copies){
 		for (var i = 0; i < copies.length; i ++) {
+			this.copySet.add(copies[i]);
 			var li = document.createElement('li');
 			li.className = "copy label label-default";
 			li.appendChild(document.createTextNode(copies[i]));
@@ -336,7 +356,34 @@ MovieCollection.prototype.displayMovieInCollection = function (movieId, title, c
 	}
 };
 
-MovieCollection.prototype.posterUrl = function (posterPath, size) {
+MovieCollection.prototype.loadFilterOptions = function (){
+	console.log("loading filter options");
+	this.genreSet.forEach(function(item){
+		this.genreFilterGroup.querySelector('.panel-body').appendChild(checkbox(item, 'genre-filter'));
+	}.bind(this));
+	this.copySet.forEach(function(item){
+		this.copiesFilterGroup.querySelector('.panel-body').appendChild(checkbox(item, 'copies-filter'));
+	}.bind(this));
+};
+
+const checkbox = function (labelText, checkboxName) {
+	var checkboxId = checkboxName + "__" + labelText.replace(' ', '_');
+	var checkboxDiv = document.createElement('div');
+	checkboxDiv.className = 'checkbox';
+	var label = document.createElement('label');
+	label.setAttribute('for', checkboxId);
+	var input = document.createElement('input');
+	input.setAttribute('id', checkboxId);
+	input.setAttribute('type', 'checkbox');
+	input.setAttribute('name', checkboxName);
+	input.setAttribute('value', labelText);
+	label.appendChild(input);
+	label.appendChild(document.createTextNode(labelText));
+	checkboxDiv.appendChild(label);
+	return checkboxDiv;
+};
+
+const posterUrl = function (posterPath, size) {
 	return MovieCollection.POSTER_BASE_URL + size + "/" + posterPath;
 };
 
