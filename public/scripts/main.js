@@ -7,7 +7,7 @@ MovieCollection.MOVIE_TEMPLATE =
 	'<ul class="copies list-inline"></ul> ' +
 	'</div>';
 MovieCollection.SEARCHED_MOVIE_TEMPLATE =
-	'<div class="movie thumbnail">' +
+	'<div class="movie-sm thumbnail">' +
 	'<div class="title"></div>' +
 	'<img class="poster"/>' +
 	'<div class="btn-group">' +
@@ -27,21 +27,34 @@ function MovieCollection(){
 	this.userName = document.getElementById('user-name');
 	this.userPic = document.getElementById('user-pic');
 	this.searchTextField = document.getElementById('search');
+	this.search2TextField = document.getElementById('search2');
 	this.searchResults = document.getElementById('search-results');
 	this.collection = document.getElementById('collection');
 
 	this.signInButton = document.getElementById('sign-in');
 	this.signOutButton = document.getElementById('sign-out');
 	this.searchButton = document.getElementById('search-button');
+	this.search2Button = document.getElementById('search2-button');
 
 	this.signOutButton.addEventListener('click', this.signOut.bind(this));
 	this.signInButton.addEventListener('click', this.signIn.bind(this));
-	this.searchButton.addEventListener('click', this.searchForMovies.bind(this));
+	this.searchButton.addEventListener('click', function(){
+		this.searchForMovies(this.searchTextField.value).bind(this);
+	}.bind(this));
+	this.search2Button.addEventListener('click', function(){
+		this.searchForMovies(this.search2TextField.value).bind(this);
+	}.bind(this));
 	this.searchTextField.addEventListener('keypress', function(e){
 		var key = e.which || e.keyCode;
 		if (key === 13){
-			this.searchForMovies();
+			this.searchForMovies(this.searchTextField.value);
 			$("#search-modal").modal();
+		}
+	}.bind(this));
+	this.search2TextField.addEventListener('keypress', function(e){
+		var key = e.which || e.keyCode;
+		if (key === 13){
+			this.searchForMovies(this.search2TextField.value);
 		}
 	}.bind(this));
 
@@ -119,8 +132,8 @@ MovieCollection.prototype.onAuthStateChanged = function (user) {
 	}
 };
 
-MovieCollection.prototype.searchForMovies = function (){
-	var path = "/search/movie?api_key=" + this.tmdbApiKey +"&query=" + this.searchTextField.value + "&page=1&include_adult=false&language=en-US";
+MovieCollection.prototype.searchForMovies = function (searchValue){
+	var path = "/search/movie?api_key=" + this.tmdbApiKey +"&query=" + searchValue + "&page=1&include_adult=false&language=en-US";
 	callTmdbApi(path, function(result){
 		this.populateSearchResults(result);
 	}.bind(this));
@@ -265,22 +278,22 @@ MovieCollection.prototype.removeMovieCopyFromCollection = function (movieId, cop
 
 MovieCollection.prototype.loadCollection = function (collectionId){
 	console.log("loading collection");
-	this.collectionRef = this.database.ref("collections/" + collectionId);
-	if (!this.moviesRef) {
-		this.moviesRef = this.database.ref("collections/" + collectionId + "/movies");
-	}
+	this.collectionRef = this.database.ref("collections/" + collectionId + "/movies").orderByChild('title')
+	// if (!this.moviesRef) {
+	// 	this.moviesRef = this.database.ref("collections/" + collectionId + "/movies").orderByChild('title');
+	// }
 
 	//make sure we remove all previous listeners.
-	this.moviesRef.off();
+	this.collectionRef.off();
 
 	var setMovie = function(data) {
 		var val = data.val();
 		var movieId = data.key;
 		this.displayMovieInCollection(movieId, val.title, toArray(val.copies));
 	}.bind(this);
-	this.moviesRef.on('child_added', setMovie);
-	this.moviesRef.on('child_changed', setMovie);
-	this.moviesRef.on('child_removed', function(childSnapshot, prevChildName){
+	this.collectionRef.on('child_added', setMovie);
+	this.collectionRef.on('child_changed', setMovie);
+	this.collectionRef.on('child_removed', function(childSnapshot, prevChildName){
 		var removedMovie = document.getElementById(childSnapshot.key);
 		removedMovie.parentNode.removeChild(removedMovie);
 	})

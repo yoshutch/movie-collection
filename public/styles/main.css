@@ -13,17 +13,33 @@
 	padding: 10px;
 }
 
+.title-div {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.search-div {
+	padding: 10px;
+}
+
 #search-results, #collection {
 	display: flex;
 	flex-wrap: wrap;
 }
 
-div.movie {
+div.movie, div.movie-sm {
 	display: flex;
 	flex-direction: column;
-	width: 160px;
 	margin-left: 5px;
 	margin-right: 5px;
+}
+div.movie {
+	width: 180px;
+}
+div.movie-sm {
+	width: 160px;
 }
 
 div.movie img{
@@ -55,3 +71,4 @@ div.movie div.btn-group{
 .close-small {
 	font-size: inherit !important;
 }
+

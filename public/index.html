@@ -25,9 +25,16 @@
 	</div>
 </nav>
 <div class="container">
-	<h1>My Movie Collection</h1>
-	<input id="search" type="text"/>
-	<button id="search-button" type="button" class="btn btn-primary" data-toggle="modal" data-target="#search-modal">Search</button>
+	<div class="title-div">
+		<h1>My Movie Collection</h1>
+		<div class="form-inline">
+			<div class="search-div form-group">
+				<label class="sr-only" for="search2">Search</label>
+				<input id="search" type="text" class="form-control" placeholder="Search"/>
+				<button id="search-button" type="button" class="btn btn-primary" data-toggle="modal" data-target="#search-modal">Search</button>
+			</div>
+		</div>
+	</div>
 	<div class="modal fade" id="search-modal" tabindex="-1" role="dialog" aria-labelledby="search-modal-label">
 		<div class="modal-dialog modal-lg" role="document">
 			<div class="modal-content">
@@ -35,8 +42,14 @@
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 					<h4 class="modal-title" id="search-modal-label">Search</h4>
 				</div>
-				<div id="search-results" class="modal-body">
+				<div class="search-div form-inline">
+					<div class="form-group">
+						<label class="sr-only" for="search2">Search</label>
+						<input id="search2" type="text" class="form-control" placeholder="Search"/>
+						<button id="search2-button" type="button" class="btn btn-primary">Search</button>
+					</div>
 				</div>
+				<div id="search-results" class="modal-body"></div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 				</div>
