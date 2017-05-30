@@ -5,6 +5,7 @@ MovieCollection.MOVIE_TEMPLATE =
 	'<div class="title"></div>' +
 	'<img class="poster"/>' +
 	'<ul class="copies list-inline"></ul> ' +
+	'<ul class="genres list-inline"></ul> ' +
 	'</div>';
 MovieCollection.SEARCHED_MOVIE_TEMPLATE =
 	'<div class="movie-sm thumbnail">' +
@@ -44,6 +45,7 @@ function MovieCollection(){
 	this.searchButton = document.getElementById('search-button');
 	this.search2Button = document.getElementById('search2-button');
 	this.showFilterButton = document.getElementById('show-filters');
+	this.filterButton = document.getElementById('filter-button');
 
 	this.genreSet = new Set();
 	this.copySet = new Set();
@@ -69,10 +71,8 @@ function MovieCollection(){
 			this.searchForMovies(this.search2TextField.value);
 		}
 	}.bind(this));
-	this.showFilterButton.addEventListener('click', function(){
-		console.log(this.genreSet, this.copySet);
-		this.loadFilterOptions();
-	}.bind(this));
+	this.showFilterButton.addEventListener('click', this.loadFilterOptions.bind(this));
+	this.filterButton.addEventListener('click', this.filter.bind(this));
 
 	this.initFirebase();
 }
@@ -136,6 +136,7 @@ MovieCollection.prototype.onAuthStateChanged = function (user) {
 		this.signInButton.style.display = "none";
 
 		this.loadCollection(this.userUid);
+		this.moviesArray = [];
 
 	} else { // User is signed out!
 		// Hide user's profile and sign-out button.
@@ -207,7 +208,6 @@ MovieCollection.prototype.populateSearchResults = function (result){
 				$button.removeClass("remove-btn").addClass("add-btn")
 					.unbind().on('click', addButtonListener)
 					.find("span.glyphicon").remove();
-				console.log($button);
 			}
 		});
 	};
@@ -312,7 +312,8 @@ MovieCollection.prototype.loadCollection = function (collectionId){
 	this.collectionRef.on('child_removed', function(childSnapshot, prevChildName){
 		var removedMovie = document.getElementById(childSnapshot.key);
 		removedMovie.parentNode.removeChild(removedMovie);
-	})
+		this.moviesArray.splice(childSnapshot.key, 1); //TODO test, this probably wont work
+	}.bind(this));
 };
 
 MovieCollection.prototype.getMovieInfo = function (movieId, callback){
@@ -333,9 +334,21 @@ MovieCollection.prototype.displayMovieInCollection = function (movieId, title, c
 		this.collection.appendChild(div);
 	}
 	this.getMovieInfo(movieId, function(movieInfo){
+		this.moviesArray[movieId] = {
+			id: movieInfo.id,
+			title: movieInfo.title,
+			genres: movieInfo.genres,
+			copies: copies
+		};
+		this.displayCount(Object.keys(this.moviesArray).length);
 		div.querySelector('.poster').setAttribute('src', posterUrl(movieInfo.poster_path, MovieCollection.POSTER_MEDIUM));
+		div.querySelector('.genres').innerHTML = "";
 		for (var i = 0; i < movieInfo.genres.length; i ++) {
 			this.genreSet.add(movieInfo.genres[i].name);
+			var li = document.createElement('li');
+			li.className = "genre label label-default";
+			li.appendChild(document.createTextNode(movieInfo.genres[i].name));
+			div.querySelector('.genres').appendChild(li);
 		}
 	}.bind(this));
 
@@ -345,7 +358,7 @@ MovieCollection.prototype.displayMovieInCollection = function (movieId, title, c
 		for (var i = 0; i < copies.length; i ++) {
 			this.copySet.add(copies[i]);
 			var li = document.createElement('li');
-			li.className = "copy label label-default";
+			li.className = "copy label label-primary";
 			li.appendChild(document.createTextNode(copies[i]));
 			var removeContainer = document.createElement('div');
 			removeContainer.innerHTML = '<button type="button" class="close close-small" aria-label="Close"><span aria-hidden="true">&times;</span></button>';
@@ -358,12 +371,85 @@ MovieCollection.prototype.displayMovieInCollection = function (movieId, title, c
 
 MovieCollection.prototype.loadFilterOptions = function (){
 	console.log("loading filter options");
+	this.genreFilterGroup.querySelector('.panel-body').innerHTML = "";
+	this.copiesFilterGroup.querySelector('.panel-body').innerHTML = "";
 	this.genreSet.forEach(function(item){
 		this.genreFilterGroup.querySelector('.panel-body').appendChild(checkbox(item, 'genre-filter'));
 	}.bind(this));
 	this.copySet.forEach(function(item){
-		this.copiesFilterGroup.querySelector('.panel-body').appendChild(checkbox(item, 'copies-filter'));
+		this.copiesFilterGroup.querySelector('.panel-body').appendChild(checkbox(item, 'copy-filter'));
 	}.bind(this));
+};
+
+MovieCollection.prototype.filter = function () {
+	console.log("filtering collection ...");
+	$("#show-filters .badge").remove(); // remove any previous badges
+	var genreFilters = document.getElementsByClassName('genre-filter');
+	var copyFilters = document.getElementsByClassName('copy-filter');
+	var genreFilterValues = [];
+	var copyFilterValues = [];
+	for (var i = 0; i < genreFilters.length; i ++) {
+		if (genreFilters[i].checked) {
+			genreFilterValues.push(genreFilters[i].value);
+		}
+	}
+	for (var j = 0; j < copyFilters.length; j ++) {
+		if (copyFilters[j].checked) {
+			copyFilterValues.push(copyFilters[j].value);
+		}
+	}
+	var k = 0;
+	var showingCount = 0;
+	this.moviesArray.forEach(function(movie){
+		var hasGenres = true;
+		if (genreFilterValues.length > 0) {
+			// filter on only selected genres
+			hasGenres = false;
+			for (k = 0; k < movie.genres.length; k ++){
+				if (genreFilterValues.indexOf(movie.genres[k].name) !== -1) {
+					// movie has genre in the selected genres
+					hasGenres = true;
+					break;
+				}
+			}
+		}
+		var hasCopies = true;
+		if (copyFilterValues.length > 0) {
+			// filter on only selected copies
+			hasCopies = false;
+			for (k = 0; k < movie.copies.length; k ++){
+				if (copyFilterValues.indexOf(movie.copies[k]) !== -1) {
+					// movie has genre in the selected genres
+					hasCopies = true;
+					break;
+				}
+			}
+		}
+		if (!hasGenres || !hasCopies) {
+			$('#' + movie.id).fadeOut('fast');
+		} else {
+			$('#' + movie.id).fadeIn('fast');
+			showingCount ++;
+		}
+
+	});
+	if (genreFilterValues.length + copyFilterValues.length > 0){
+		$("#show-filters").append('<span class="badge">' + (genreFilterValues.length + copyFilterValues.length) + '</span>');
+	}
+	this.displayCount(showingCount);
+};
+
+MovieCollection.prototype.displayCount = function (displayCount) {
+	var totalMovieCount = Object.keys(this.moviesArray).length;
+	var movie_s = "movie";
+	if (totalMovieCount === 0 || totalMovieCount > 1){
+		movie_s = "movies";
+	}
+	if (displayCount !== totalMovieCount) {
+		$('#showing-count').html("Showing " + displayCount + " out of " + totalMovieCount + " " + movie_s);
+	} else {
+		$('#showing-count').html(totalMovieCount + " " + movie_s);
+	}
 };
 
 const checkbox = function (labelText, checkboxName) {
@@ -376,6 +462,7 @@ const checkbox = function (labelText, checkboxName) {
 	input.setAttribute('id', checkboxId);
 	input.setAttribute('type', 'checkbox');
 	input.setAttribute('name', checkboxName);
+	input.className = checkboxName;
 	input.setAttribute('value', labelText);
 	label.appendChild(input);
 	label.appendChild(document.createTextNode(labelText));

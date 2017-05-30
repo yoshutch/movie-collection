@@ -33,7 +33,7 @@
 </nav>
 <div class="container">
 	<div id="title-section">
-		<h1>My Movie Collection</h1>
+		<h1>My Movie Collection <small id="showing-count"></small></h1>
 		<div id="filter-section">
 			<a id="show-filters" class="btn btn-info" role="button" data-toggle="collapse" href="#filters" aria-expanded="false" aria-controls="filters">
 				Show Filters
@@ -56,21 +56,21 @@
 				<div class="panel panel-default">
 					<div class="panel-heading">Favorites</div>
 					<div class="panel-body">
-						<div class="radio">
+						<div class="radio disabled">
 							<label for="favorites-any">
-								<input id="favorites-any" type="radio" name="favorites-filter" checked="checked">
+								<input id="favorites-any" type="radio" name="favorites-filter" checked="checked" disabled>
 								Any
 							</label>
 						</div>
-						<div class="radio">
+						<div class="radio disabled">
 							<label for="favorites">
-								<input id="favorites" type="radio" name="favorites-filter">
+								<input id="favorites" type="radio" name="favorites-filter" disabled>
 								Favorites
 							</label>
 						</div>
-						<div class="radio">
+						<div class="radio disabled">
 							<label for="favorites-none">
-								<input id="favorites-none" type="radio" name="favorites-filter">
+								<input id="favorites-none" type="radio" name="favorites-filter" disabled>
 								No Favorites
 							</label>
 						</div>
@@ -78,10 +78,10 @@
 				</div>
 			</div>
 			<div id="filter-buttons" class="text-right">
-				<button class="btn btn-default" role="button">
+				<button type="reset" class="btn btn-default" role="button">
 					Clear Filters
 				</button>
-				<button class="btn btn-primary" role="button">
+				<button id="filter-button" type="button" class="btn btn-primary" role="button">
 					Filter
 					<span class="glyphicon glyphicon-filter"></span>
 				</button>

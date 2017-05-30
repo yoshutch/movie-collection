@@ -76,11 +76,11 @@ div.movie div.btn-group{
 	font-weight: bold;
 }
 
-.copies {
+.copies, .genres {
 	padding: 0 5px !important;
 }
 
-.copy {
+.copy, .genre {
 	margin: 0 5px;
 }
 
