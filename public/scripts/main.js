@@ -39,13 +39,13 @@ function MovieCollection(){
 	this.collection = document.getElementById('collection');
 	this.genreFilterGroup = document.getElementById('genre-filter-group');
 	this.copiesFilterGroup = document.getElementById('copies-filter-group');
+	this.filterForm = document.getElementById('filter-form');
 
 	this.signInButton = document.getElementById('sign-in');
 	this.signOutButton = document.getElementById('sign-out');
 	this.searchButton = document.getElementById('search-button');
 	this.search2Button = document.getElementById('search2-button');
 	this.showFilterButton = document.getElementById('show-filters');
-	this.filterButton = document.getElementById('filter-button');
 
 	this.genreSet = new Set();
 	this.copySet = new Set();
@@ -72,7 +72,19 @@ function MovieCollection(){
 		}
 	}.bind(this));
 	this.showFilterButton.addEventListener('click', this.loadFilterOptions.bind(this));
-	this.filterButton.addEventListener('click', this.filter.bind(this));
+	this.filterForm.addEventListener('change', this.filter.bind(this));
+	this.filterForm.addEventListener('reset', function(){
+		console.log("reset");
+		setTimeout(this.filter.bind(this), 10);
+	}.bind(this));
+
+	$(".show-only-checkbox").on('change', function(){
+		if ($(this).is(":checked")){
+			$("." + $(this).val()).show();
+		} else {
+			$("." + $(this).val()).hide();
+		}
+	});
 
 	this.initFirebase();
 }
@@ -379,6 +391,7 @@ MovieCollection.prototype.loadFilterOptions = function (){
 	this.copySet.forEach(function(item){
 		this.copiesFilterGroup.querySelector('.panel-body').appendChild(checkbox(item, 'copy-filter'));
 	}.bind(this));
+	// $("#filter-form").find("input").on('change', this.filter.bind(this));
 };
 
 MovieCollection.prototype.filter = function () {

@@ -36,13 +36,44 @@
 		<h1>My Movie Collection <small id="showing-count"></small></h1>
 		<div id="filter-section">
 			<a id="show-filters" class="btn btn-info" role="button" data-toggle="collapse" href="#filters" aria-expanded="false" aria-controls="filters">
-				Show Filters
+				Filters
 				<span class="glyphicon glyphicon-filter"></span>
 			</a>
 		</div>
 	</div>
-	<div class="collapse" id="filters">
-		<form class="well">
+	<div class="collapse well" id="filters">
+		<form id="view" class="form-inline">
+			<h4>Show Only:</h4>
+			<div id="show-only">
+				<div class="checkbox">
+					<label>
+						<input class="show-only-checkbox" type="checkbox" value="title" checked> Title
+					</label>
+				</div>
+				<div class="checkbox">
+					<label>
+						<input class="show-only-checkbox" type="checkbox" value="poster" checked> Poster
+					</label>
+				</div>
+				<div class="checkbox">
+					<label>
+						<input class="show-only-checkbox" type="checkbox" value="copies" checked> Copies
+					</label>
+				</div>
+				<div class="checkbox">
+					<label>
+						<input class="show-only-checkbox" type="checkbox" value="genres" checked> Genres
+					</label>
+				</div>
+			</div>
+			<div id="sort-by-group" class="form-group text-right">
+				<label for="sort-by">Sort By </label>
+				<select id="sort-by" class="form-control disabled">
+					<option>Title</option>
+				</select>
+			</div>
+		</form>
+		<form id="filter-form">
 			<h3>Filter by:</h3>
 			<div id="filter-groups">
 				<div id="genre-filter-group" class="panel panel-default">
@@ -78,12 +109,8 @@
 				</div>
 			</div>
 			<div id="filter-buttons" class="text-right">
-				<button type="reset" class="btn btn-default" role="button">
+				<button id="reset-filters-button" type="reset" class="btn btn-default" role="button">
 					Clear Filters
-				</button>
-				<button id="filter-button" type="button" class="btn btn-primary" role="button">
-					Filter
-					<span class="glyphicon glyphicon-filter"></span>
 				</button>
 			</div>
 		</form>

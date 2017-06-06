@@ -45,8 +45,21 @@
 	flex-wrap: wrap;
 	max-height: 200px;
 }
+#genre-filter-group {
+	flex-grow: 2 !important;
+}
 #filter-buttons {
 	margin-top: 10px;
+}
+#view {
+	display: flex;
+	align-items: baseline;
+}
+#show-only {
+	flex-grow: 1;
+}
+#show-only div {
+	margin: 0 10px;
 }
 
 div.movie, div.movie-sm {
