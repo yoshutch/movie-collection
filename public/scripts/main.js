@@ -25,6 +25,7 @@ MovieCollection.FILTER_CHECKBOX_TEMPLATE =
 	'<input type="checkbox">' +
 	'</label>' +
 	'</div>';
+MovieCollection.CLOSE_BUTTON_TEMPLATE = '<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>';
 MovieCollection.POSTER_BASE_URL = "https://image.tmdb.org/t/p/";
 MovieCollection.POSTER_SMALL = "w92";
 MovieCollection.POSTER_MEDIUM = "w154";
@@ -46,6 +47,7 @@ function MovieCollection(){
 	this.searchButton = document.getElementById('search-button');
 	this.search2Button = document.getElementById('search2-button');
 	this.showFilterButton = document.getElementById('show-filters');
+	this.removeButton = document.getElementById('remove-button');
 
 	this.genreSet = new Set();
 	this.copySet = new Set();
@@ -77,7 +79,7 @@ function MovieCollection(){
 		console.log("reset");
 		setTimeout(this.filter.bind(this), 10);
 	}.bind(this));
-
+	this.removeButton.addEventListener('click', this.showRemoveCopyButtons.bind(this));
 	$(".show-only-checkbox").on('change', function(){
 		if ($(this).is(":checked")){
 			$("." + $(this).val()).show();
@@ -372,10 +374,13 @@ MovieCollection.prototype.displayMovieInCollection = function (movieId, title, c
 			var li = document.createElement('li');
 			li.className = "copy label label-primary";
 			li.appendChild(document.createTextNode(copies[i]));
-			var removeContainer = document.createElement('div');
-			removeContainer.innerHTML = '<button type="button" class="close close-small" aria-label="Close"><span aria-hidden="true">&times;</span></button>';
-			var removeNode = removeContainer.firstChild;
-			li.appendChild(removeNode);
+			li.setAttribute('data-movie-id', movieId);
+			li.setAttribute('data-copy-type', copies[i]);
+
+			// var removeContainer = document.createElement('div');
+			// removeContainer.innerHTML = '<button type="button" class="close close-small" aria-label="Close"><span aria-hidden="true">&times;</span></button>';
+			// var removeNode = removeContainer.firstChild;
+			// li.appendChild(removeNode);
 			div.querySelector('.copies').appendChild(li);
 		}
 	}
@@ -462,6 +467,36 @@ MovieCollection.prototype.displayCount = function (displayCount) {
 		$('#showing-count').html("Showing " + displayCount + " out of " + totalMovieCount + " " + movie_s);
 	} else {
 		$('#showing-count').html(totalMovieCount + " " + movie_s);
+	}
+};
+
+MovieCollection.prototype.showRemoveCopyButtons = function(){
+	if ($("#remove-button").hasClass('active')){
+		$("#remove-button").removeClass('active');
+		$(".copy")
+			.removeClass("btn btn-block btn-danger btn-xs")
+			.addClass("label label-primary")
+			.unbind("click")
+			.find('button').remove();
+	} else {
+		$("#remove-button").addClass('active');
+		var that = this;
+		var changeLabelsToButtons = function(){
+			$(".copy")
+				.addClass("btn btn-block btn-danger btn-xs")
+				.removeClass("label label-primary")
+				.on("click", clickRemove)
+				.append(MovieCollection.CLOSE_BUTTON_TEMPLATE);
+		};
+		var clickRemove = function(){
+			that.removeMovieCopyFromCollection($(this).data("movie-id"), $(this).data("copy-type"), that.userUid, function(err){
+				if (err) {
+					alert(err);
+				}
+				changeLabelsToButtons();
+			});
+		};
+		changeLabelsToButtons();
 	}
 };
 
