@@ -105,3 +105,6 @@ div.movie div.btn-group{
 	font-size: inherit !important;
 }
 
+#random-modal div.movie {
+	margin: 0 auto;
+}

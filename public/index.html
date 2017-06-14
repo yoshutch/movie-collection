@@ -35,6 +35,9 @@
 	<div id="title-section">
 		<h1>My Movie Collection <small id="showing-count"></small></h1>
 		<div>
+			<button class="random-button btn btn-primary" role="button" type="button">Random Movie</button>
+		</div>
+		<div>
 			<button id="remove-button" class="btn btn-sm btn-default" role="button" type="button">Remove Copies</button>
 			<a id="show-filters" class="btn btn-info" role="button" data-toggle="collapse" href="#filters" aria-expanded="false" aria-controls="filters">
 				Filters
@@ -110,6 +113,7 @@
 				</div>
 			</div>
 			<div id="filter-buttons" class="text-right">
+
 				<button id="reset-filters-button" type="reset" class="btn btn-default" role="button">
 					Clear Filters
 				</button>
@@ -133,6 +137,26 @@
 				</div>
 				<div id="search-results" class="modal-body"></div>
 				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="random-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="random-modal-label">
+		<div class="modal-dialog modal-sm" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="random-modal-label">Random Movie</h4>
+				</div>
+				<div class="movie thumbnail">
+					<div class="title"></div>
+					<img class="poster"/>
+					<ul class="copies list-inline"></ul>
+					<ul class="genres list-inline"></ul>
+				</div>
+				<div class="modal-footer">
+					<button class="random-button btn btn-primary" role="button" type="button">Random Movie</button>
 					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 				</div>
 			</div>

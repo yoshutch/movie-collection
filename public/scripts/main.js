@@ -87,6 +87,7 @@ function MovieCollection(){
 			$("." + $(this).val()).hide();
 		}
 	});
+	$(".random-button").on('click', this.showRandomMovie.bind(this));
 
 	this.initFirebase();
 }
@@ -149,8 +150,10 @@ MovieCollection.prototype.onAuthStateChanged = function (user) {
 		// Hide sign-in button.
 		this.signInButton.style.display = "none";
 
-		this.loadCollection(this.userUid);
 		this.moviesArray = [];
+		this.filteredMovies = [];
+		this.moviesCache = [];
+		this.loadCollection(this.userUid);
 
 	} else { // User is signed out!
 		// Hide user's profile and sign-out button.
@@ -331,11 +334,17 @@ MovieCollection.prototype.loadCollection = function (collectionId){
 };
 
 MovieCollection.prototype.getMovieInfo = function (movieId, callback){
-	callTmdbApi("/movie/" + movieId + "?api_key=" + this.tmdbApiKey + "&language=en-US",
-		function(result){
-			callback(result);
-		}
-	);
+	if (this.moviesCache[movieId]){
+		console.log("Getting movie from cache", movieId);
+		callback(this.moviesCache[movieId]);
+	} else {
+		callTmdbApi("/movie/" + movieId + "?api_key=" + this.tmdbApiKey + "&language=en-US",
+			function(result){
+				this.moviesCache[movieId] = result;
+				callback(result);
+			}.bind(this)
+		);
+	}
 };
 
 MovieCollection.prototype.displayMovieInCollection = function (movieId, title, copies){
@@ -352,8 +361,10 @@ MovieCollection.prototype.displayMovieInCollection = function (movieId, title, c
 			id: movieInfo.id,
 			title: movieInfo.title,
 			genres: movieInfo.genres,
+			poster_path: movieInfo.poster_path,
 			copies: copies
 		};
+		this.filteredMovies.push(movieId);
 		this.displayCount(Object.keys(this.moviesArray).length);
 		div.querySelector('.poster').setAttribute('src', posterUrl(movieInfo.poster_path, MovieCollection.POSTER_MEDIUM));
 		div.querySelector('.genres').innerHTML = "";
@@ -418,6 +429,7 @@ MovieCollection.prototype.filter = function () {
 	}
 	var k = 0;
 	var showingCount = 0;
+	this.filteredMovies = [];
 	this.moviesArray.forEach(function(movie){
 		var hasGenres = true;
 		if (genreFilterValues.length > 0) {
@@ -448,9 +460,9 @@ MovieCollection.prototype.filter = function () {
 		} else {
 			$('#' + movie.id).fadeIn('fast');
 			showingCount ++;
+			this.filteredMovies.push(movie.id);
 		}
-
-	});
+	}.bind(this));
 	if (genreFilterValues.length + copyFilterValues.length > 0){
 		$("#show-filters").append('<span class="badge">' + (genreFilterValues.length + copyFilterValues.length) + '</span>');
 	}
@@ -504,6 +516,15 @@ MovieCollection.prototype.showRemoveCopyButtons = function(){
 		};
 		changeLabelsToButtons();
 	}
+};
+
+MovieCollection.prototype.showRandomMovie = function(){
+	var randomIndex = Math.floor(Math.random() * this.filteredMovies.length);
+	var selectedMovie = this.moviesArray[this.filteredMovies[randomIndex]];
+	var $random = $("#random-modal");
+	$random.modal();
+	$random.find(".title").html(selectedMovie.title);
+	$random.find(".poster").attr("src", posterUrl(selectedMovie.poster_path, MovieCollection.POSTER_MEDIUM));
 };
 
 const checkbox = function (labelText, checkboxName) {
