@@ -480,6 +480,12 @@ MovieCollection.prototype.showRemoveCopyButtons = function(){
 			.find('button').remove();
 	} else {
 		$("#remove-button").addClass('active');
+		var $showCopiesCheckbox = $(".show-only-checkbox[value='copies']");
+		if (!$showCopiesCheckbox.prop("checked")){
+			$showCopiesCheckbox.prop("checked", true);
+			$showCopiesCheckbox.trigger("change");
+		}
+
 		var that = this;
 		var changeLabelsToButtons = function(){
 			$(".copy")
